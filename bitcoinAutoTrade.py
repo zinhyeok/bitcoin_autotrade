@@ -1,10 +1,11 @@
 from os import access
 import time
 from numpy import absolute
+import pyupbit
 import datetime
 import pandas as pd
 import requests
-import pyupbit
+
 
 f = open("upbit.txt")
 lines = f.readlines()
