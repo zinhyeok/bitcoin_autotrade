@@ -17,6 +17,7 @@ upbit = pyupbit.Upbit(access, secret)
 mybalances = upbit.get_balances()
 xrp_price = pyupbit.get_current_price("KRW-XRP")
 print(mybalances)
+print(upbit.get_balance("BTC"))
 # resp = upbit.buy_limit_order("")
 
 # pprint.pprint()
