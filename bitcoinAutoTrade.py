@@ -155,12 +155,14 @@ def get_noised_df():
 # 매수_매도 시작
 fee = 0.0005
 mycoin_li = []
+noised_coin = get_noised_coin()
+df_noise = get_noised_df()
 while True:
     try:
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
-        # 9:00~9:10초사이에는 노이즈가 0,4이하인 코인 선정
+        # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트
         if (
             start_time + datetime.timedelta(seconds=10)
             < now
@@ -194,17 +196,20 @@ while True:
                         time.sleep(50)
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도
                 sell_price = get_sell_price(ticker, check["noise"].mean())
-                coin_count = get_balance(ticker)
+                # coin_count = get_balance(ticker)
                 if current_price < sell_price:
-                    sell_result = upbit.sell_market_order(ticker, coin_count)
-                    mycoin_li = noised_coin
-                    mycoin_li = [i for i in mycoin_li if i not in ticker]
+                    # sell_result = upbit.sell_market_order(ticker, coin_count)
+                    sell_result = upbit.sell_market_order(ticker)
+                    # mycoin_li = noised_coin
+                    # mycoin_li = [i for i in mycoin_li if i not in ticker]
+                    noised_coin = noised_coin.remove(ticker)
             # 청산 매도 8:59:50 10초~다음날 9:00:00
             else:
                 try:
                     for ticker in mycoin_li:
-                        coin_count = get_balance(ticker)
-                        sell_result = upbit.sell_market_order(ticker, coin_count)
+                        # coin_count = get_balance(ticker)
+                        sell_result = upbit.sell_market_order(ticker)
+                        # sell_result = upbit.sell_market_order(ticker, coin_count)
                         # post_message(myToken,"#crypto", "BTC buy : " +str(sell_result))
                         time.sleep(1)
                 except Exception as e:
