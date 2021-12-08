@@ -1,24 +1,21 @@
 from os import access
-from re import S
-import pyupbit
-import pprint
 import time
+from numpy import absolute
+import pyupbit
 import datetime
+import pandas as pd
+import requests
 
-f = open("upbit.txt")
-lines = f.readlines()
-access = lines[0].strip()  # \n 제거
-secret = lines[1].strip()
-f.close()
 
-# Upbit class instance, object 만드느 과정
-upbit = pyupbit.Upbit(access, secret)
-# balances 여러개 자산정보 + api 호출에 관한 것, balance는 한개(ticker 정하기)
-mybalances = upbit.get_balances()
-xrp_price = pyupbit.get_current_price("KRW-XRP")
-print(mybalances)
-print(upbit.get_balance("BTC"))
-# resp = upbit.buy_limit_order("")
+def get_target_price(ticker, k):
+    """변동성 돌파 전략으로 매수 목표가 조회"""
+    df = pyupbit.get_ohlcv(ticker, interval="day", count=2)
+    target_price = df.iloc[0]["close"] + (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
+    dict_target = {ticker: target_price}
+    return dict_target
 
-# pprint.pprint()
-# pprint.pprint(mybalances[0])
+
+tickers = {"KRW-BTC", "KRW-OMG"}
+for ticker in tickers:
+    a = get_target_price(ticker, 0.5)
+print(a)
