@@ -52,6 +52,14 @@ def get_balance(ticker):
     return 0
 
 
+# 수익률 조회
+def get_rateReturn():
+    # past = upbit.get_balance("KRW")
+    temp = upbit.get_balance("KRW")
+    # rate = (temp - past)/past
+    return temp
+
+
 # 현재가 조회
 def get_current_price(ticker):
     """현재가 조회"""
@@ -170,6 +178,8 @@ while True:
         ):
             noised_coin = get_noised_coin()
             df_noise = get_noised_df()
+            rateReturn = get_rateReturn
+            post_message(myToken, "#history", "현재 잔고는: " + str(rateReturn))
         # 자동 매수, 매도 9:00 10초~다음날 8:59:50
         if (
             start_time + datetime.timedelta(seconds=10)
