@@ -182,4 +182,9 @@ $RECYCLE.BIN/
 
 #secret file
 upbit.txt
+*.ipynb
+
+#secret folder 
+.vscode/
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,venv
