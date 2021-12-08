@@ -162,7 +162,7 @@ while True:
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
-        # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트
+        # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트
         if (
             start_time + datetime.timedelta(seconds=10)
             < now
@@ -189,7 +189,9 @@ while True:
                         try:
                             buy_result = upbit.buy_market_order(ticker, coin_budget)
                             post_message(
-                                myToken, "#history", "BTC buy : " + str(buy_result)
+                                myToken,
+                                "#history",
+                                "buy : " + str(ticker) + str(buy_result),
                             )
                         except Exception as e:
                             print(e)
@@ -202,6 +204,9 @@ while True:
                 if current_price < sell_price:
                     # sell_result = upbit.sell_market_order(ticker, coin_count)
                     sell_result = upbit.sell_market_order(ticker)
+                    post_message(
+                        myToken, "#history", "sell : " + str(ticker) + str(sell_result)
+                    )
                     # mycoin_li = noised_coin
                     # mycoin_li = [i for i in mycoin_li if i not in ticker]
                     noised_coin = noised_coin.remove(ticker)
@@ -213,7 +218,9 @@ while True:
                         sell_result = upbit.sell_market_order(ticker)
                         # sell_result = upbit.sell_market_order(ticker, coin_count)
                         post_message(
-                            myToken, "#history", "BTC buy : " + str(sell_result)
+                            myToken,
+                            "#history",
+                            "sell : " + str(ticker) + str(sell_result),
                         )
                         time.sleep(1)
                 except Exception as e:
