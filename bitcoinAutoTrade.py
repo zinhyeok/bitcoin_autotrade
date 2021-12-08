@@ -70,7 +70,7 @@ def get_maday5(ticker):
 # 15분 이동평균 조회
 def get_mamin15(ticker):
     """15분 이동 평균선의 3회차 이동평균 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval="minute15", count=3)
+    df = pyupbit.get_ohlcv(ticker, interval="minute5", count=3)
     mamin15 = df["close"].rolling(3).mean().iloc[-1]
     return mamin15
 
@@ -85,8 +85,8 @@ def get_start_time(ticker):
 
 # 매도 가격 타겟팅
 def get_sell_price(ticker, k):
-    """변동성 돌파 전략과 15분 이평선 아래일시 매도 목표가 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval="minute30", count=2)
+    """15분 이평선의 하락 변동성 돌파시 매도"""
+    df = pyupbit.get_ohlcv(ticker, interval="minute15", count=1)
     sell_price = get_mamin15(ticker) - (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
     return sell_price
 
