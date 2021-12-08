@@ -16,17 +16,17 @@ f.close()
 # Upbit class instance, object 만드는 과정
 upbit = pyupbit.Upbit(access, secret)
 
-# myToken = "xoxb-your-token"
-
-'''
+# slack에 메세지 봇 추가
 def post_message(token, channel, text):
-    """슬랙 메시지 전송"""
     response = requests.post(
         "https://slack.com/api/chat.postMessage",
         headers={"Authorization": "Bearer " + token},
         data={"channel": channel, "text": text},
     )
-'''
+    print(response)
+
+
+myToken = "xoxb-2799366043639-2816286941284-yDDBBjbHhbeGp0xIhnwW3I5c"
 
 
 #####함수 모음
@@ -150,7 +150,7 @@ def get_noised_df():
 
 
 # 시작 메세지 슬랙 전송
-# post_message(myToken,"#crypto", "autotrade start")
+post_message(myToken, "#history", "autotrade start")
 
 # 매수_매도 시작
 fee = 0.0005
@@ -188,12 +188,14 @@ while True:
                         # 매수 단계
                         try:
                             buy_result = upbit.buy_market_order(ticker, coin_budget)
-                        # post_message(myToken,"#crypto", "BTC buy : " +str(buy_result))
+                            post_message(
+                                myToken, "#history", "BTC buy : " + str(buy_result)
+                            )
                         except Exception as e:
                             print(e)
-                            # post_message(myToken,"#crypto", e)
+                            post_message(myToken, "#history", e)
 
-                        time.sleep(50)
+                        time.sleep(1)
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도
                 sell_price = get_sell_price(ticker, check["noise"].mean())
                 # coin_count = get_balance(ticker)
@@ -210,12 +212,14 @@ while True:
                         # coin_count = get_balance(ticker)
                         sell_result = upbit.sell_market_order(ticker)
                         # sell_result = upbit.sell_market_order(ticker, coin_count)
-                        # post_message(myToken,"#crypto", "BTC buy : " +str(sell_result))
+                        post_message(
+                            myToken, "#history", "BTC buy : " + str(sell_result)
+                        )
                         time.sleep(1)
                 except Exception as e:
                     print(e)
-                    # post_message(myToken,"#crypto", e)
+                    post_message(myToken, "#history", e)
     except Exception as e:
         print(e)
-        # post_message(myToken,"#crypto", e)
+        post_message(myToken, "#histroy", e)
         time.sleep(1)
