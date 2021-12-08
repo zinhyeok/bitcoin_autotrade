@@ -26,7 +26,7 @@ def post_message(token, channel, text):
     print(response)
 
 
-myToken = "xoxb-2799366043639-2816286941284-5jdWTIALeudkvwnJkhj8b3vJ"
+myToken = "xoxb-2799366043639-2816286941284-3ntzFDbZVYynHePyffDCkjAa"
 
 
 #####함수 모음
@@ -155,13 +155,13 @@ post_message(myToken, "#history", "현재 잔고는: " + str(upbit.get_balance("
 # 매수_매도 시작
 fee = 0.0005
 mycoin_li = []
-noised_coin = get_noised_coin()
-df_noise = get_noised_df()
 while True:
     try:
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
+        noised_coin = get_noised_coin()
+        df_noise = get_noised_df()
         # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트
         if (
             start_time + datetime.timedelta(seconds=10)
@@ -184,9 +184,11 @@ while True:
                 target_price = get_target_price(ticker, check["noise"].mean())
                 maday5 = get_maday5(ticker)
                 current_price = get_current_price(ticker)
+
+                # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
                 if target_price < current_price and maday5 < current_price:
                     krw = get_balance("KRW")
-                    coin_budget = krw * ((1 - fee) / len(noised_coin))
+                    coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
                     if krw > 5000:
                         # 매수 단계
                         try:
