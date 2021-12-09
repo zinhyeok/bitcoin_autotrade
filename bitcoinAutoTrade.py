@@ -207,9 +207,7 @@ while True:
 
         # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
-            start_time + datetime.timedelta(seconds=10)
-            < now
-            < start_time + datetime.timedelta(seconds=10)
+            start_time < now < start_time + datetime.timedelta(seconds=10)
             or target_df is None
         ):
             noised_coin = get_noised_coin()
