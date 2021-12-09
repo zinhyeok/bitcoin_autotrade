@@ -7,15 +7,13 @@ import datetime
 import pandas as pd
 import requests
 
-'''
+"""
 f = open("upbit.txt")
 lines = f.readlines()
-access = lines[0].strip()  
+access = lines[0].strip()
 secret = lines[1].strip()
 f.close()
-'''
-access =   
-secret =
+"""
 
 # Upbit class instance, object 만드는 과정
 upbit = pyupbit.Upbit(access, secret)
@@ -221,6 +219,8 @@ while True:
             post_message(
                 myToken, "#history", "현재 잔고는: " + str(upbit.get_balance("KRW"))
             )
+            print(start_time)
+            print("set end")
 
         # 자동 매수, 매도 9:00 10초~다음날 8:59:50
         elif (
@@ -229,6 +229,7 @@ while True:
             < end_time - datetime.timedelta(seconds=10)
             and target_df is not None
         ):
+            print("...................")
             try:
                 for ticker in noised_coin:
                     target_price = target_df.loc[ticker, "target_price"]
