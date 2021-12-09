@@ -182,7 +182,6 @@ $RECYCLE.BIN/
 
 #secret file
 upbit.txt
-*.ipynb
 
 #secret folder 
 .vscode/

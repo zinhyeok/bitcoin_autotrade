@@ -1,4 +1,5 @@
 from os import access
+from re import L
 import time
 from numpy import absolute
 import pyupbit
@@ -26,7 +27,7 @@ def post_message(token, channel, text):
     print(response)
 
 
-myToken = "xoxb-2799366043639-2816286941284-ZRHFLB6KM6KfbcC5SStD8zG0"
+myToken = "xoxb-2799366043639-2816286941284-a2qDOXRYIbq0YCf79GbPojkL"
 
 
 #####함수 모음
@@ -149,18 +150,47 @@ def get_noised_df():
     return df_noise
 
 
+# 매수, 매도의 target df만들기(기존 방식으로는 내가 원하는 코인을 원하는 가격에 매수 불가: 자료구조 문제)
+def get_target_df(tickers):
+    target_df = pd.DataFrame(
+        columns=["coin", "target_price", "maday5", "sell_price", "k"]
+    )
+    for coin in tickers:
+        df_noise = get_noised_df()
+        check = df_noise[df_noise["ticker"] == coin]
+        k = check["noise"].mean()
+        target_price = get_target_price(coin, k)
+        maday5 = get_maday5(coin)
+        sell_price = get_sell_price(coin, k)
+        # DataFrame에 특정 정보를 이용하여 data 채우기
+        target_df = target_df.append(
+            pd.DataFrame(
+                [[coin, target_price, maday5, sell_price, k]],
+                columns=["coin", "target_price", "maday5", "sell_price", "k"],
+            ),
+            ignore_index=True,
+        )
+    target_df.set_index("coin", inplace=True)
+    return target_df
+
+
+# 매도 가격 5분마다 업데이트
+def get_updateSell_price(df, ticker, k):
+    df = df
+    df["sell_price"] = df["sell_price"].map(get_sell_price(ticker, k))
+    return df
+
+
 # 시작 메세지 슬랙 전송
-post_message(myToken, "#history", "autotrade start")
-post_message(myToken, "#history", "현재 잔고는: " + str(upbit.get_balance("KRW")))
+post_message(myToken, "#history", "시스템 시작")
 
 # 매수_매도 시작
+noised_coin = None
+target_df = None
+
 try:
     fee = 0.0005
     current_coin = []
-    # 초기 세팅
-    noised_coin = get_noised_coin()
-    df_noise = get_noised_df()
-
 
 except Exception as e:
     print(e)
@@ -178,30 +208,27 @@ while True:
             start_time + datetime.timedelta(seconds=10)
             < now
             < start_time + datetime.timedelta(seconds=10)
+            or target_df is None
         ):
             noised_coin = get_noised_coin()
-            df_noise = get_noised_df()
+            target_df = get_target_df(noised_coin)
+            current_coin = []
+
             post_message(
                 myToken, "#history", "현재 잔고는: " + str(upbit.get_balance("KRW"))
-               
-            for ticker in noised_coin:
-                check = df_noise[df_noise["ticker"] == ticker]
-                target_price = get_target_price(ticker, check["noise"].mean())
-                maday5 = get_maday5(ticker)
-                print("{}의 목표가는 {}".format(ticker, target_price))
+            )
+
         # 자동 매수, 매도 9:00 10초~다음날 8:59:50
-        if (
+        elif (
             start_time + datetime.timedelta(seconds=10)
             < now
             < end_time - datetime.timedelta(seconds=10)
-            and noised_coin is not None
+            and target_df is not None
         ):
             try:
                 for ticker in noised_coin:
-                    check = df_noise[df_noise["ticker"] == ticker]
-                    target_price = get_target_price(ticker, check["noise"].mean())
-                    maday5 = get_maday5(ticker)
-                    print("초기 세팅 {}의 목표가는 {}".format(ticker, target_price))
+                    target_price = target_df.loc[ticker, "target_price"]
+                    maday5 = target_df.loc[ticker, "maday5"]
                     current_price = get_current_price(ticker)
                     # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
                     if target_price < current_price and maday5 < current_price:
@@ -224,26 +251,29 @@ while True:
 
                     # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
                     # 매도 후에는 오늘 매수리스트에서 제거
-                    sell_price = get_sell_price(ticker, check["noise"].mean())
-                    coin_count = get_balance(ticker)
-                    if current_price < sell_price and ticker in current_coin:
-                        sell_result = upbit.sell_market_order(ticker, coin_count)
-                        # sell_result = upbit.sell_market_order(ticker)
-                        post_message(
-                            myToken,
-                            "#history",
-                            "코인 매도 : " + str(ticker),
-                        )
-                        # mycoin_li = noised_coin
-                        # mycoin_li = [i for i in mycoin_li if i not in ticker]
-                        noised_coin = noised_coin.remove(ticker)
+                    for ticker in current_coin:
+                        target_df = get_updateSell_price(target_df, ticker, k)
+                        k = target_df.loc[ticker, "k"]
+                        sell_price = target_df.loc[ticker, "sell_price"]
+                        coin_count = get_balance(ticker)
+                        if current_price < sell_price and ticker in current_coin:
+                            sell_result = upbit.sell_market_order(ticker, coin_count)
+                            # sell_result = upbit.sell_market_order(ticker)
+                            post_message(
+                                myToken,
+                                "#history",
+                                "코인 매도 : " + str(ticker),
+                            )
+                            current_coin = current_coin.remove(ticker)
+
             except Exception as e:
                 print(e)
                 post_message(myToken, "#histroy", e)
-            # 청산 매도 8:59:50 10초~다음날 9:00:00
-            else:
-                try:
-                    for ticker in noised_coin:
+        # 모두 청산 매도 8:59:50 10초~다음날 9:00:00
+        else:
+            try:
+                if current_coin is not None:
+                    for ticker in current_coin:
                         coin_count = get_balance(ticker)
                         # sell_result = upbit.sell_market_order(ticker)
                         sell_result = upbit.sell_market_order(ticker, coin_count)
@@ -252,15 +282,13 @@ while True:
                             "#history",
                             "sell : " + str(ticker) + str(sell_result),
                         )
-                        noised_coin = noised_coin.remove(ticker)
+                        current_coin = current_coin.remove(ticker)
                         time.sleep(1)
-                except Exception as e:
-                    print(e)
-                    post_message(myToken, "#history", e)
+
+            except Exception as e:
+                print(e)
+                post_message(myToken, "#history", e)
     except Exception as e:
         print(e)
         post_message(myToken, "#histroy", e)
         time.sleep(1)
-
-#'NoneType' object has no attribute 'index' 메모리 릭 문제인 것 같음 + target 가격 세팅의 함수 설정 다시할것(dictionary 형으로 해야할 거 같음) + 특정 코인의 가격이 그 타깃을 넘었을 때 매수해야함
-#현재는 아님 변수명이 같아서 다른 타깃에 매치됨
