@@ -7,12 +7,15 @@ import datetime
 import pandas as pd
 import requests
 
-
+'''
 f = open("upbit.txt")
 lines = f.readlines()
-access = lines[0].strip()  # \n 제거
+access = lines[0].strip()  
 secret = lines[1].strip()
 f.close()
+'''
+access =   
+secret =
 
 # Upbit class instance, object 만드는 과정
 upbit = pyupbit.Upbit(access, secret)
@@ -183,6 +186,7 @@ def get_updateSell_price(df, ticker, k):
 
 # 시작 메세지 슬랙 전송
 post_message(myToken, "#history", "시스템 시작")
+print("Trade System Start")
 
 # 매수_매도 시작
 noised_coin = None
