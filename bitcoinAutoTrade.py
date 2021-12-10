@@ -19,6 +19,8 @@ f.close()
 upbit = pyupbit.Upbit(access, secret)
 
 # slack에 메세지 봇 추가
+
+
 def post_message(token, channel, text):
     response = requests.post(
         "https://slack.com/api/chat.postMessage",
@@ -28,16 +30,17 @@ def post_message(token, channel, text):
     print(response)
 
 
-myToken = "xoxb-2799366043639-2816286941284-a2qDOXRYIbq0YCf79GbPojkL"
+myToken = "slackbot token"
 
 
-#####함수 모음
+# 함수 모음
 
 # 매수 목표가 조회
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
     df = pyupbit.get_ohlcv(ticker, interval="day", count=2)
-    target_price = df.iloc[0]["close"] + (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
+    target_price = df.iloc[0]["close"] + \
+        (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
     return target_price
 
 
@@ -89,7 +92,8 @@ def get_start_time(ticker):
 def get_sell_price(ticker, k):
     """15분 이평선의 하락 변동성 돌파시 매도"""
     df = pyupbit.get_ohlcv(ticker, interval="minute15", count=1)
-    sell_price = get_mamin15(ticker) - (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
+    sell_price = get_mamin15(
+        ticker) - (df.iloc[0]["high"] - df.iloc[0]["low"]) * k
     return sell_price
 
 
@@ -110,7 +114,8 @@ def get_noised_coin():
         try:
             temp = df
             temp["noise"] = 1 - (
-                absolute(df["open"] - df["close"]) / absolute(df["high"] - df["low"])
+                absolute(df["open"] - df["close"]) /
+                absolute(df["high"] - df["low"])
             )
             df_noise = pd.concat([df, temp])
         except:
@@ -143,7 +148,8 @@ def get_noised_df():
         try:
             temp = df
             temp["noise"] = 1 - (
-                absolute(df["open"] - df["close"]) / absolute(df["high"] - df["low"])
+                absolute(df["open"] - df["close"]) /
+                absolute(df["high"] - df["low"])
             )
             df_noise = pd.concat([df, temp])
         except:
@@ -182,22 +188,13 @@ def get_updateSell_price(df, ticker, k):
     return df
 
 
-# 시작 메세지 슬랙 전송
-post_message(myToken, "#history", "시스템 시작")
-print("Trade System Start")
-
 # 매수_매도 시작
 noised_coin = None
 target_df = None
 
-try:
-    fee = 0.0005
-    current_coin = []
-
-except Exception as e:
-    print(e)
-    post_message(myToken, "#histroy", e)
-
+# 시작 메세지 슬랙 전송
+post_message(myToken, "#history", "시스템 시작")
+print("Trade System Start")
 
 while True:
     try:
@@ -210,15 +207,20 @@ while True:
             start_time < now < start_time + datetime.timedelta(seconds=10)
             or target_df is None
         ):
+            fee = 0.0005
+            current_coin = []
             noised_coin = get_noised_coin()
             target_df = get_target_df(noised_coin)
-            current_coin = []
 
             post_message(
                 myToken, "#history", "현재 잔고는: " + str(upbit.get_balance("KRW"))
             )
+
             print(start_time)
             print("set end")
+
+            post_message(
+                myToken, "#history", "세팅 완료 시간: " + str(now))
 
         # 자동 매수, 매도 9:00 10초~다음날 8:59:50
         elif (
@@ -239,7 +241,8 @@ while True:
                         coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
                         # 매수 단계
                         try:
-                            buy_result = upbit.buy_market_order(ticker, coin_budget)
+                            buy_result = upbit.buy_market_order(
+                                ticker, coin_budget)
                             post_message(
                                 myToken,
                                 "#history",
@@ -260,7 +263,8 @@ while True:
                         sell_price = target_df.loc[ticker, "sell_price"]
                         coin_count = get_balance(ticker)
                         if current_price < sell_price and ticker in current_coin:
-                            sell_result = upbit.sell_market_order(ticker, coin_count)
+                            sell_result = upbit.sell_market_order(
+                                ticker, coin_count)
                             # sell_result = upbit.sell_market_order(ticker)
                             post_message(
                                 myToken,
@@ -279,7 +283,8 @@ while True:
                     for ticker in current_coin:
                         coin_count = get_balance(ticker)
                         # sell_result = upbit.sell_market_order(ticker)
-                        sell_result = upbit.sell_market_order(ticker, coin_count)
+                        sell_result = upbit.sell_market_order(
+                            ticker, coin_count)
                         post_message(
                             myToken,
                             "#history",
@@ -291,6 +296,7 @@ while True:
             except Exception as e:
                 print(e)
                 post_message(myToken, "#history", e)
+
     except Exception as e:
         print(e)
         post_message(myToken, "#histroy", e)
