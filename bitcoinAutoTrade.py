@@ -16,6 +16,9 @@ f.close()
 """
 
 # Upbit class instance, object 만드는 과정
+access = ""
+secret = ""
+
 upbit = pyupbit.Upbit(access, secret)
 
 # slack에 메세지 봇 추가
@@ -202,9 +205,9 @@ while True:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
-        # 9:00~9:10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
+        # 9:00~9:01분사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
-            start_time < now < start_time + datetime.timedelta(seconds=10)
+            start_time < now < start_time + datetime.timedelta(minutes=1)
             or target_df is None
         ):
             fee = 0.0005
@@ -222,11 +225,11 @@ while True:
             post_message(
                 myToken, "#history", "세팅 완료 시간: " + str(now))
 
-        # 자동 매수, 매도 9:00 10초~다음날 8:59:50
+        # 자동 매수, 매도 9:01분~다음날 8:59분
         elif (
-            start_time + datetime.timedelta(seconds=10)
+            start_time + datetime.timedelta(minutes=1)
             < now
-            < end_time - datetime.timedelta(seconds=10)
+            < end_time - datetime.timedelta(minutes=1)
             and target_df is not None
         ):
             print("...................")
@@ -276,7 +279,7 @@ while True:
             except Exception as e:
                 print(e)
                 post_message(myToken, "#histroy", e)
-        # 모두 청산 매도 8:59:50 10초~다음날 9:00:00
+        # 모두 청산 매도 다음날 8:59:00~ 9:00:00
         else:
             try:
                 if current_coin is not None:

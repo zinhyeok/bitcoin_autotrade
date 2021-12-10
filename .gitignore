@@ -182,6 +182,7 @@ $RECYCLE.BIN/
 
 #secret file
 upbit.txt
+token.txt
 
 #secret folder 
 .vscode/
