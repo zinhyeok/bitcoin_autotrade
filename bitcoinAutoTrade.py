@@ -66,13 +66,13 @@ def get_current_price(ticker):
     return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
 
-# 5일 이동평균 조회
-def get_maday5(ticker):
+# 3일 이동평균 조회
+def get_maday3(ticker):
     """5일 이동 평균선 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval="day", count=5)
-    maday5 = df["close"].rolling(5).mean().iloc[-1]
+    df = pyupbit.get_ohlcv(ticker, interval="day", count=3)
+    maday3 = df["close"].rolling(3).mean().iloc[-1]
 
-    return maday5
+    return maday3
 
 
 # 15분 이동평균 조회
@@ -163,20 +163,20 @@ def get_noised_df():
 # 매수, 매도의 target df만들기(기존 방식으로는 내가 원하는 코인을 원하는 가격에 매수 불가: 자료구조 문제)
 def get_target_df(tickers):
     target_df = pd.DataFrame(
-        columns=["coin", "target_price", "maday5", "sell_price", "k"]
+        columns=["coin", "target_price", "maday3", "sell_price", "k"]
     )
     for coin in tickers:
         df_noise = get_noised_df()
         check = df_noise[df_noise["ticker"] == coin]
         k = check["noise"].mean()
         target_price = get_target_price(coin, k)
-        maday5 = get_maday5(coin)
+        maday3 = get_maday3(coin)
         sell_price = get_sell_price(coin, k)
         # DataFrame에 특정 정보를 이용하여 data 채우기
         target_df = target_df.append(
             pd.DataFrame(
-                [[coin, target_price, maday5, sell_price, k]],
-                columns=["coin", "target_price", "maday5", "sell_price", "k"],
+                [[coin, target_price, maday3, sell_price, k]],
+                columns=["coin", "target_price", "maday3", "sell_price", "k"],
             ),
             ignore_index=True,
         )
@@ -205,9 +205,9 @@ while True:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
-        # 9:00~9:01분사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
+        # 9:00~9:01 10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
-            start_time < now < start_time + datetime.timedelta(minutes=1)
+            start_time < now < start_time + datetime.timedelta(seconds=10)
             or target_df is None
         ):
             fee = 0.0005
@@ -225,9 +225,9 @@ while True:
             post_message(
                 myToken, "#history", "세팅 완료 시간: " + str(now))
 
-        # 자동 매수, 매도 9:01분~다음날 8:59분
+        # 자동 매수, 매도 9:00 10초~다음날 8:59분
         elif (
-            start_time + datetime.timedelta(minutes=1)
+            start_time + datetime.timedelta(seconds=10)
             < now
             < end_time - datetime.timedelta(minutes=1)
             and target_df is not None
@@ -236,10 +236,10 @@ while True:
             try:
                 for ticker in noised_coin:
                     target_price = target_df.loc[ticker, "target_price"]
-                    maday5 = target_df.loc[ticker, "maday5"]
+                    maday3 = target_df.loc[ticker, "maday3"]
                     current_price = get_current_price(ticker)
                     # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
-                    if target_price < current_price and maday5 < current_price:
+                    if target_price < current_price and maday3 < current_price:
                         krw = get_balance("KRW")
                         coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
                         # 매수 단계
