@@ -104,7 +104,7 @@ def get_sell_price(ticker, k):
 # 노이즈 함수
 
 def get_noised_coin():
-    """노이즈 df에 추가 + 0.5"""
+    """3일 노이즈 df에 추가 + 0.5아래인 값 분류"""
     tickers = pyupbit.get_tickers(fiat="KRW")
     df = pd.DataFrame()
     for ticker in tickers:
@@ -216,8 +216,7 @@ while True:
         ):
             fee = 0.0005
             current_coin = []
-            #noised_coin = get_noised_coin()
-            noised_coin = pyupbit.get_tickers(fiat="KRW")
+            noised_coin = get_noised_coin()
             target_df = get_target_df(noised_coin)
 
             post_message(
