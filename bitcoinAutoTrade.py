@@ -5,6 +5,7 @@ from numpy import absolute
 import pyupbit
 import datetime
 import pandas as pd
+from pyupbit.quotation_api import get_tickers
 import requests
 
 """
@@ -68,7 +69,7 @@ def get_current_price(ticker):
 
 # 3일 이동평균 조회
 def get_maday3(ticker):
-    """5일 이동 평균선 조회"""
+    """3일 이동 평균선 조회"""
     df = pyupbit.get_ohlcv(ticker, interval="day", count=3)
     maday3 = df["close"].rolling(3).mean().iloc[-1]
 
@@ -101,13 +102,14 @@ def get_sell_price(ticker, k):
 
 
 # 노이즈 함수
+
 def get_noised_coin():
-    """노이즈 0.4이하인것 조회"""
+    """노이즈 df에 추가 + 0.5"""
     tickers = pyupbit.get_tickers(fiat="KRW")
     df = pd.DataFrame()
     for ticker in tickers:
         try:
-            temp = pyupbit.get_ohlcv(ticker, interval="day", count=20)
+            temp = pyupbit.get_ohlcv(ticker, interval="day", count=3)
             temp["ticker"] = ticker
             df = pd.concat([df, temp])
         except:
@@ -135,13 +137,15 @@ def get_noised_coin():
 
 
 # 노이즈가 포함된 df 출력
+
+
 def get_noised_df():
-    """노이즈 0.4이하인것 조회"""
+    """노이즈 0.5이하인것 조회"""
     tickers = pyupbit.get_tickers(fiat="KRW")
     df = pd.DataFrame()
     for ticker in tickers:
         try:
-            temp = pyupbit.get_ohlcv(ticker, interval="day", count=20)
+            temp = pyupbit.get_ohlcv(ticker, interval="day", count=3)
             temp["ticker"] = ticker
             df = pd.concat([df, temp])
         except:
@@ -212,7 +216,8 @@ while True:
         ):
             fee = 0.0005
             current_coin = []
-            noised_coin = get_noised_coin()
+            #noised_coin = get_noised_coin()
+            noised_coin = pyupbit.get_tickers(fiat="KRW")
             target_df = get_target_df(noised_coin)
 
             post_message(
