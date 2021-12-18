@@ -228,7 +228,8 @@ while True:
 
             post_message(
                 myToken, "#history", "세팅 완료 시간: " + str(now))
-
+            
+            target_df.head()
         # 자동 매수, 매도 9:00 10초~다음날 8:59분
         elif (
             start_time + datetime.timedelta(seconds=10)
