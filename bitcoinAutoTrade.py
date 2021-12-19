@@ -235,6 +235,7 @@ def get_updateSell_price(df, ticker, k):
 # 매수_매도 시작
 noised_coin = None
 target_df = None
+tickers = pyupbit.get_tickers(fiat="KRW")
 
 # 시작 메세지 슬랙 전송
 post_message(myToken, "#history", "시스템 시작")
@@ -301,13 +302,13 @@ while True:
                                 "#history",
                                 "코인 매수 : " + str(ticker),
                             )
-                            noised_coin = noised_coin.remove(ticker)
-                            current_coin = current_coin.append(ticker)
+                            noised_coin.remove(ticker)
+                            current_coin.append(ticker)
                         except Exception as e:
                             print("buy error: {}".format(e))
                             post_message(myToken, "#history",
                                          "매수에러: " + str(e))
-                            noised_coin = noised_coin.remove(e)
+                            noised_coin.remove(e)
                         time.sleep(1)
 
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
@@ -332,7 +333,7 @@ while True:
                                     "#history",
                                     "코인 매도 : " + str(ticker)
                                 )
-                                current_coin = current_coin.remove(ticker)
+                                current_coin.remove(ticker)
                             except Exception as e:
                                 print("sell error: {}".format(e))
                                 post_message(myToken, "#histroy",
@@ -353,7 +354,7 @@ while True:
                             "#history",
                             "sell : " + str(ticker) + str(sell_result),
                         )
-                        current_coin = current_coin.remove(ticker)
+                        current_coin.remove(ticker)
                         time.sleep(1)
 
             except Exception as e:
@@ -363,5 +364,5 @@ while True:
     except Exception as e:
         print("auto set error: {}".format(e))
         post_message(myToken, "#histroy", "전체 코드 에러:" + str(e))
-        tickers = tickers.remove(e)
+        tickers.remove(e)
         time.sleep(1)
