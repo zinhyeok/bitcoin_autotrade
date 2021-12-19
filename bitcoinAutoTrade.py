@@ -308,7 +308,10 @@ while True:
                             print("buy error: {}".format(e))
                             post_message(myToken, "#history",
                                          "매수에러: " + str(e))
-                            noised_coin.remove(e)
+                            if str(e) in noised_coin:
+                                noised_coin.remove(e)
+                            else:
+                                pass
                         time.sleep(1)
 
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
@@ -364,5 +367,8 @@ while True:
     except Exception as e:
         print("auto set error: {}".format(e))
         post_message(myToken, "#histroy", "전체 코드 에러:" + str(e))
-        tickers.remove(e)
+        if str(e) in tickers:
+            tickers.remove(e)
+        else:
+            pass
         time.sleep(1)
