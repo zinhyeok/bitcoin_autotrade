@@ -274,6 +274,7 @@ while True:
                 target_df.head()
             except:
                 post_message(myToken, "#history", "세팅 실패")
+                print("set fail")
                 target_df = None
         # 자동 매수, 매도 9:00 10초~다음날 8:59분
         elif (
@@ -304,8 +305,9 @@ while True:
                             noised_coin = noised_coin.remove(ticker)
                             current_coin = current_coin.append(ticker)
                         except Exception as e:
-                            print(e)
-                            post_message(myToken, "#history", e)
+                            print("매수 에러: {}".format(e))
+                            post_message(myToken, "#history",
+                                         "매수에러: " + str(e))
                         time.sleep(1)
 
                     # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
@@ -320,19 +322,26 @@ while True:
                             sell_price = current_price * 100
 
                         if current_price < sell_price and ticker in current_coin:
-                            sell_result = upbit.sell_market_order(
-                                ticker, coin_count)
-                            # sell_result = upbit.sell_market_order(ticker)
-                            post_message(
-                                myToken,
-                                "#history",
-                                "코인 매도 : " + str(ticker),
-                            )
-                            current_coin = current_coin.remove(ticker)
+                            try:
+                                sell_result = upbit.sell_market_order(
+                                    ticker, coin_count)
+                                # sell_result = upbit.sell_market_order(ticker)
+                                post_message(
+                                    myToken,
+                                    "#history",
+                                    "코인 매도 : " + str(ticker)
+                                )
+                                current_coin = current_coin.remove(ticker)
+                            except Exception as e:
+                                print("매도 에러: {}".format(e))
+                                post_message(myToken, "#histroy",
+                                             "매도 에러:" + str(e))
+
+                        time.sleep(280)
 
             except Exception as e:
-                print(e)
-                post_message(myToken, "#histroy", e)
+                print("자동 매수 매도 에러: {}".format(e))
+                post_message(myToken, "#histroy", "자동 매수 매도 에러:" + str(e))
         # 모두 청산 매도 다음날 8:59:00~ 9:00:00
         else:
             try:
@@ -351,10 +360,10 @@ while True:
                         time.sleep(1)
 
             except Exception as e:
-                print(e)
-                post_message(myToken, "#history", e)
+                print("청산 에러: {}".format(e))
+                post_message(myToken, "#history", "청산 에러:" + str(e))
 
     except Exception as e:
-        print(e)
-        post_message(myToken, "#histroy", e)
+        print("전체 코드 에러: {}".format(e))
+        post_message(myToken, "#histroy", "전체 코드 에러:" + str(e))
         time.sleep(1)
