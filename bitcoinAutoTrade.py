@@ -284,34 +284,34 @@ while True:
             and target_df is not None
         ):
             print("...................")
-            try:
-                for ticker in noised_coin:
-                    target_price = target_df.loc[ticker, "target_price"]
-                    maday3 = target_df.loc[ticker, "maday3"]
-                    current_price = get_current_price(ticker)
-                    # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
-                    if target_price < current_price and maday3 < current_price:
-                        krw = get_balance("KRW")
-                        coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
-                        # 매수 단계
-                        try:
-                            buy_result = upbit.buy_market_order(
-                                ticker, coin_budget)
-                            post_message(
-                                myToken,
-                                "#history",
-                                "코인 매수 : " + str(ticker),
-                            )
-                            noised_coin = noised_coin.remove(ticker)
-                            current_coin = current_coin.append(ticker)
-                        except Exception as e:
-                            print("buy error: {}".format(e))
-                            post_message(myToken, "#history",
-                                         "매수에러: " + str(e))
-                        time.sleep(1)
+            for ticker in noised_coin:
+                target_price = target_df.loc[ticker, "target_price"]
+                maday3 = target_df.loc[ticker, "maday3"]
+                current_price = get_current_price(ticker)
+                # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
+                if target_price < current_price and maday3 < current_price:
+                    krw = get_balance("KRW")
+                    coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
+                    # 매수 단계
+                    try:
+                        buy_result = upbit.buy_market_order(
+                            ticker, coin_budget)
+                        post_message(
+                            myToken,
+                            "#history",
+                            "코인 매수 : " + str(ticker),
+                        )
+                        noised_coin = noised_coin.remove(ticker)
+                        current_coin = current_coin.append(ticker)
+                    except Exception as e:
+                        print("buy error: {}".format(e))
+                        post_message(myToken, "#history",
+                                     "매수에러: " + str(e))
+                    time.sleep(1)
 
-                    # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
-                    # 매도 후에는 오늘 매수리스트에서 제거
+                # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
+                # 매도 후에는 오늘 매수리스트에서 제거
+                if current_coin is not None:
                     for ticker in current_coin:
                         target_df = get_updateSell_price(target_df, ticker, k)
                         k = target_df.loc[ticker, "k"]
@@ -336,12 +336,8 @@ while True:
                                 print("sell error: {}".format(e))
                                 post_message(myToken, "#histroy",
                                              "매도 에러:" + str(e))
-
                         time.sleep(280)
 
-            except Exception as e:
-                print("auto sell buy error: {}".format(e))
-                post_message(myToken, "#histroy", "자동 매수 매도 에러:" + str(e))
         # 모두 청산 매도 다음날 8:59:00~ 9:00:00
         else:
             try:
