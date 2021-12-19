@@ -1,4 +1,4 @@
-from os import access
+from os import access, remove
 from re import L
 import time
 from numpy import NaN, absolute
@@ -8,17 +8,17 @@ import pandas as pd
 from pyupbit.quotation_api import get_tickers
 import requests
 
-"""
+'''
 f = open("upbit.txt")
 lines = f.readlines()
 access = lines[0].strip()
 secret = lines[1].strip()
 f.close()
-"""
+'''
 
 # Upbit class instance, object 만드는 과정
-access = "sMkLH85fWOykRtqjN7qxflqVYErtVHTfJfmwJahe"
-secret = "4RFDwXYfs1Nf2cWPNxcAh33MksFEQaL4evpjCaxp"
+access = ""
+secret = ""
 
 upbit = pyupbit.Upbit(access, secret)
 
@@ -245,7 +245,7 @@ while True:
         now = datetime.datetime.now()
         start_time = datetime.datetime(now.year, now.month, now.day, 9, 00, 00)
         end_time = start_time + datetime.timedelta(days=1)
-
+        tickers = pyupbit.get_tickers(fiat="KRW")
         # 9:00~9:01 10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
             start_time < now < start_time + datetime.timedelta(seconds=10)
@@ -253,7 +253,6 @@ while True:
         ):
             fee = 0.0005
             try:
-                tickers = pyupbit.get_tickers(fiat="KRW")
                 current_coin = []
                 noised_coin = get_noised_coin(tickers)
                 target_df = get_target_df(noised_coin)
@@ -308,6 +307,7 @@ while True:
                             print("buy error: {}".format(e))
                             post_message(myToken, "#history",
                                          "매수에러: " + str(e))
+                            noised_coin = noised_coin.remove(e)
                         time.sleep(1)
 
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
@@ -363,4 +363,5 @@ while True:
     except Exception as e:
         print("auto set error: {}".format(e))
         post_message(myToken, "#histroy", "전체 코드 에러:" + str(e))
+        tickers = tickers.remove(e)
         time.sleep(1)
