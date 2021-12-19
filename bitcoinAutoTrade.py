@@ -17,8 +17,8 @@ f.close()
 """
 
 # Upbit class instance, object 만드는 과정
-access = ""
-secret = ""
+access = "sMkLH85fWOykRtqjN7qxflqVYErtVHTfJfmwJahe"
+secret = "4RFDwXYfs1Nf2cWPNxcAh33MksFEQaL4evpjCaxp"
 
 upbit = pyupbit.Upbit(access, secret)
 
@@ -120,9 +120,8 @@ def get_sell_price(ticker, k):
 # 노이즈 함수
 
 # 노이즈 코인 리스트로 반환
-def get_noised_coin():
+def get_noised_coin(tickers):
     """3일 노이즈 df에 추가 + 0.5아래인 값 분류"""
-    tickers = pyupbit.get_tickers(fiat="KRW")
     df = pd.DataFrame()
     for ticker in tickers:
         try:
@@ -244,7 +243,7 @@ print("Trade System Start")
 while True:
     try:
         now = datetime.datetime.now()
-        start_time = get_start_time("KRW-BTC")
+        start_time = datetime.datetime(now.year, now.month, now.day, 9, 00, 00)
         end_time = start_time + datetime.timedelta(days=1)
 
         # 9:00~9:01 10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
@@ -254,8 +253,9 @@ while True:
         ):
             fee = 0.0005
             try:
+                tickers = pyupbit.get_tickers(fiat="KRW")
                 current_coin = []
-                noised_coin = get_noised_coin()
+                noised_coin = get_noised_coin(tickers)
                 target_df = get_target_df(noised_coin)
 
                 post_message(
@@ -284,30 +284,31 @@ while True:
             and target_df is not None
         ):
             print("...................")
-            for ticker in noised_coin:
-                target_price = target_df.loc[ticker, "target_price"]
-                maday3 = target_df.loc[ticker, "maday3"]
-                current_price = get_current_price(ticker)
-                # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
-                if target_price < current_price and maday3 < current_price:
-                    krw = get_balance("KRW")
-                    coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
-                    # 매수 단계
-                    try:
-                        buy_result = upbit.buy_market_order(
-                            ticker, coin_budget)
-                        post_message(
-                            myToken,
-                            "#history",
-                            "코인 매수 : " + str(ticker),
-                        )
-                        noised_coin = noised_coin.remove(ticker)
-                        current_coin = current_coin.append(ticker)
-                    except Exception as e:
-                        print("buy error: {}".format(e))
-                        post_message(myToken, "#history",
-                                     "매수에러: " + str(e))
-                    time.sleep(1)
+            if noised_coin is not None:
+                for ticker in noised_coin:
+                    target_price = target_df.loc[ticker, "target_price"]
+                    maday3 = target_df.loc[ticker, "maday3"]
+                    current_price = get_current_price(ticker)
+                    # 이동평균선보다 가격이 높고, 변동성 돌파 가격보다도 높을 시 매수
+                    if target_price < current_price and maday3 < current_price:
+                        krw = get_balance("KRW")
+                        coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
+                        # 매수 단계
+                        try:
+                            buy_result = upbit.buy_market_order(
+                                ticker, coin_budget)
+                            post_message(
+                                myToken,
+                                "#history",
+                                "코인 매수 : " + str(ticker),
+                            )
+                            noised_coin = noised_coin.remove(ticker)
+                            current_coin = current_coin.append(ticker)
+                        except Exception as e:
+                            print("buy error: {}".format(e))
+                            post_message(myToken, "#history",
+                                         "매수에러: " + str(e))
+                        time.sleep(1)
 
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
                 # 매도 후에는 오늘 매수리스트에서 제거
