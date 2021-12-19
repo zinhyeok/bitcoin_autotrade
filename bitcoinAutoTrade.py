@@ -305,7 +305,7 @@ while True:
                             noised_coin = noised_coin.remove(ticker)
                             current_coin = current_coin.append(ticker)
                         except Exception as e:
-                            print("매수 에러: {}".format(e))
+                            print("buy error: {}".format(e))
                             post_message(myToken, "#history",
                                          "매수에러: " + str(e))
                         time.sleep(1)
@@ -333,14 +333,14 @@ while True:
                                 )
                                 current_coin = current_coin.remove(ticker)
                             except Exception as e:
-                                print("매도 에러: {}".format(e))
+                                print("sell error: {}".format(e))
                                 post_message(myToken, "#histroy",
                                              "매도 에러:" + str(e))
 
                         time.sleep(280)
 
             except Exception as e:
-                print("자동 매수 매도 에러: {}".format(e))
+                print("auto sell buy error: {}".format(e))
                 post_message(myToken, "#histroy", "자동 매수 매도 에러:" + str(e))
         # 모두 청산 매도 다음날 8:59:00~ 9:00:00
         else:
@@ -360,10 +360,10 @@ while True:
                         time.sleep(1)
 
             except Exception as e:
-                print("청산 에러: {}".format(e))
+                print("all sell error: {}".format(e))
                 post_message(myToken, "#history", "청산 에러:" + str(e))
 
     except Exception as e:
-        print("전체 코드 에러: {}".format(e))
+        print("auto set error: {}".format(e))
         post_message(myToken, "#histroy", "전체 코드 에러:" + str(e))
         time.sleep(1)
