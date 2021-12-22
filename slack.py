@@ -16,7 +16,9 @@ def get_start_time(ticker):
     return start_time
 
 
+now = datetime.datetime.now()
 a = get_start_time("KRW-BTC")
 print(a)
-now = datetime.datetime.now()
 print(now)
+tickers = pyupbit.get_tickers(fiat="KRW")
+print(tickers)

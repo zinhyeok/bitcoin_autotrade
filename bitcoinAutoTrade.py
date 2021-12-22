@@ -7,7 +7,7 @@ import datetime
 import pandas as pd
 from pyupbit.quotation_api import get_tickers
 import requests
-
+import pytz
 '''
 f = open("upbit.txt")
 lines = f.readlines()
@@ -231,22 +231,90 @@ def get_updateSell_price(df, ticker, k):
 
     return df
 
+# 주문 채결 확인 알고리즘
+
+
+def check_order(ticker):
+    buy_unconcluded = upbit.get_order()
+    df = pd.DataFrame(buy_unconcluded)
+    unconcluded_coin = df['market'].values.tolist()
+    if ticker in unconcluded_coin:
+        uuid = upbit.get_oder('uuid')
+        upbit.cancel_order(uuid)
+        return 1
+    else:
+        return 0
+
+# 매수 알고리즘(약 11초 delay 발생)
+
+
+def buy_coin(ticker, price):
+    upbit.buy_market_order(ticker, price)
+    time.sleep(1)
+    check_buy = check_order(ticker)
+    if check_buy == 0:
+        post_message(myToken,
+                     "#history",
+                     "코인 매수 : " + str(ticker)
+                     )
+        return 0
+    while(check_buy == 1):
+        upbit.buy_market_order(ticker, price)
+        time.sleep(10)
+        check_buy = check_order(ticker)
+        if check_buy == 0:
+            post_message(
+                myToken,
+                "#history",
+                "코인 매수 : " + str(ticker)
+            )
+            break
+    return 0
+
+# 매도 알고리즘(약 11초 delay 발생)
+
+
+def sell_coin(ticker, balance):
+    upbit.sell_market_order(ticker, balance)
+    time.sleep(1)
+    check_sell = check_order(ticker)
+    if check_sell == 0:
+        post_message(
+            myToken,
+            "#history",
+            "코인 매도 : " + str(ticker)
+        )
+        return 0
+    while(check_sell == 1):
+        upbit.sell_market_order(ticker, balance)
+        time.sleep(10)
+        check_sell = check_order(ticker)
+        if check_sell == 0:
+            post_message(
+                myToken,
+                "#history",
+                "코인 매도 : " + str(ticker)
+            )
+            break
+    return 0
+
 
 # 매수_매도 시작
 noised_coin = None
 target_df = None
 tickers = pyupbit.get_tickers(fiat="KRW")
-
+KST = pytz.timezone('Asia/Seoul')
 # 시작 메세지 슬랙 전송
 post_message(myToken, "#history", "시스템 시작")
 print("Trade System Start")
 
 while True:
     try:
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(KST)
         start_time = datetime.datetime(now.year, now.month, now.day, 9, 00, 00)
         end_time = start_time + datetime.timedelta(days=1)
-        tickers = pyupbit.get_tickers(fiat="KRW")
+        start_time = KST.localize(start_time)
+        end_time = KST.localize(end_time)
         # 9:00~9:01 10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
             start_time < now < start_time + datetime.timedelta(seconds=10)
@@ -254,6 +322,7 @@ while True:
         ):
             fee = 0.0005
             try:
+                tickers = pyupbit.get_tickers(fiat="KRW")
                 current_coin = []
                 noised_coin = get_noised_coin(tickers)
                 target_df = get_target_df(noised_coin)
@@ -295,15 +364,11 @@ while True:
                         coin_budget = int(krw * ((1 - fee) / len(noised_coin)))
                         # 매수 단계
                         try:
-                            buy_result = upbit.buy_market_order(
-                                ticker, coin_budget)
-                            post_message(
-                                myToken,
-                                "#history",
-                                "코인 매수 : " + str(ticker),
-                            )
-                            noised_coin.remove(ticker)
-                            current_coin.append(ticker)
+                            buy_result = buy_coin(ticker, coin_budget)
+                            if buy_result == 0:
+                                noised_coin.remove(ticker)
+                                current_coin.append(ticker)
+
                         except Exception as e:
                             print("buy error: {}".format(e))
                             post_message(myToken, "#history",
@@ -315,7 +380,7 @@ while True:
                         time.sleep(1)
 
                 # 자동매도: 시가가 전 15분틱 3개의 이동평균의 노이즈만큼 감소 and 거래량 15분 틱 3개의 이동평균보다 낮을 시 매도 + 내가 현재 보유중인 코인만 매도
-                # 매도 후에는 오늘 매수리스트에서 제거
+                # 매도 후에는 오늘 보유리스트에서 제거
                 if current_coin is not None:
                     for ticker in current_coin:
                         target_df = get_updateSell_price(target_df, ticker, k)
@@ -328,15 +393,9 @@ while True:
 
                         if current_price < sell_price and ticker in current_coin:
                             try:
-                                sell_result = upbit.sell_market_order(
-                                    ticker, coin_count)
-                                # sell_result = upbit.sell_market_order(ticker)
-                                post_message(
-                                    myToken,
-                                    "#history",
-                                    "코인 매도 : " + str(ticker)
-                                )
-                                current_coin.remove(ticker)
+                                sell_result = sell_coin(ticker, coin_count)
+                                if sell_result == 0:
+                                    current_coin.remove(ticker)
                             except Exception as e:
                                 print("sell error: {}".format(e))
                                 post_message(myToken, "#histroy",
@@ -350,14 +409,10 @@ while True:
                     for ticker in current_coin:
                         coin_count = get_balance(ticker)
                         # sell_result = upbit.sell_market_order(ticker)
-                        sell_result = upbit.sell_market_order(
-                            ticker, coin_count)
-                        post_message(
-                            myToken,
-                            "#history",
-                            "sell : " + str(ticker) + str(sell_result),
-                        )
-                        current_coin.remove(ticker)
+                        sell_result = sell_coin(ticker, coin_count)
+                        if sell_result == 0:
+                            current_coin.remove(ticker)
+
                         time.sleep(1)
 
             except Exception as e:
