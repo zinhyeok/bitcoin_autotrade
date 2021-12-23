@@ -298,6 +298,25 @@ def sell_coin(ticker, balance):
             break
     return 0
 
+# 거래량 상위 50개만 가져오기
+
+
+def get_sort50(tickers):
+    df = pd.DataFrame()
+    for ticker in tickers:
+        try:
+            temp = pyupbit.get_ohlcv(ticker, interval="day", count=1)
+            temp["ticker"] = ticker
+            df = pd.concat([df, temp])
+        except:
+            pass
+    # 결측치 데이터 삭제
+    df.dropna(inplace=True)
+    df_sort_top50 = df.sort_values(by='volume', ascending=False).groupby(
+        'ticker', sort=False).head(50)
+    sort_coin50 = df_sort_top50['ticker'].values.tolist()
+    return sort_coin50
+
 
 # 매수_매도 시작
 noised_coin = None
@@ -322,9 +341,9 @@ while True:
         ):
             fee = 0.0005
             try:
-                tickers = pyupbit.get_tickers(fiat="KRW")
+                sort_coin50 = get_sort50(tickers)
                 current_coin = []
-                noised_coin = get_noised_coin(tickers)
+                noised_coin = get_noised_coin(sort_coin50)
                 target_df = get_target_df(noised_coin)
 
                 post_message(
@@ -335,12 +354,13 @@ while True:
                 print(start_time)
                 print("set end")
 
+                target_coin = target_df['coin'].values.tolist()
                 post_message(myToken, "#history", "세팅 완료 시간: " + str(now))
-                print(noised_coin)
-                post_message(myToken, "#history", "타깃은: " +
-                             " ".join(noised_coin))
+                print(target_coin)
 
-                target_df.head()
+                post_message(myToken, "#history", "타깃은: " +
+                             " ".join(target_coin))
+
             except:
                 post_message(myToken, "#history", "세팅 실패")
                 print("set fail")
