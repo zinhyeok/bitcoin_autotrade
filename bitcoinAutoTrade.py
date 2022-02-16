@@ -318,6 +318,7 @@ def get_sort50(tickers):
     return sort_coin50
 
 
+# 병렬 처리 추가 할것!
 # 매수_매도 시작
 noised_coin = None
 target_df = None
@@ -341,7 +342,10 @@ while True:
         ):
             fee = 0.0005
             try:
-                sort_coin50 = get_sort50(tickers)
+               # tickers = pyupbit.get_tickers(fiat="KRW")
+               # sort_coin50 = get_sort50(tickers)
+                sort_coin50 = ['KRW-BTT', 'KRW-XEC', 'KRW-MFT', 'KRW-MBL', 'KRW-TRX', 'KRW-TFUEL', 'KRW-QKC', 'KRW-DOGE', 'KRW-SC', 'KRW-AHT', 'KRW-VET', 'KRW-MVL', 'KRW-XRP', 'KRW-STMX', 'KRW-RFR', 'KRW-MED', 'KRW-POWR', 'KRW-ORBS', 'KRW-ANKR', 'KRW-IQ', 'KRW-JST', 'KRW-BORA', 'KRW-SNT', 'KRW-ZIL', 'KRW-MANA', 'KRW-META', 'KRW-ONG', 'KRW-SSX', 'KRW-WAXP', 'KRW-ICX', 'KRW-STPT', 'KRW-CHZ', 'KRW-XLM', 'KRW-WEMIX', 'KRW-ADA', 'KRW-HBAR', 'KRW-ZRX', 'KRW-UPP', 'KRW-HUM', 'KRW-MOC', 'KRW-AERGO', 'KRW-FCT2', 'KRW-STEEM', 'KRW-ONT', 'KRW-THETA', 'KRW-ALGO', 'KRW-SXP',
+                               'KRW-ARDR', 'KRW-POLY', 'KRW-STX', 'KRW-KNC', 'KRW-CRO', 'KRW-EOS', 'KRW-ELF', 'KRW-WAVES', 'KRW-FLOW', 'KRW-CVC', 'KRW-SBD', 'KRW-GLM', 'KRW-MLK', 'KRW-DAWN', 'KRW-1INCH', 'KRW-ENJ', 'KRW-GRS', 'KRW-KAVA', 'KRW-SRM', 'KRW-NEO', 'KRW-HIVE', 'KRW-PUNDIX', 'KRW-STORJ', 'KRW-IOTA', 'KRW-GAS', 'KRW-ARK', 'KRW-AXS', 'KRW-NEAR', 'KRW-MTL', 'KRW-AQT', 'KRW-XTZ', 'KRW-STRAX', 'KRW-LSK', 'KRW-ETC', 'KRW-OMG', 'KRW-CBK', 'KRW-TON', 'KRW-LINK', 'KRW-DOT', 'KRW-SOL', 'KRW-AVAX', 'KRW-REP', 'KRW-STRK', 'KRW-BTG', 'KRW-ETH', 'KRW-BSV', 'KRW-LTC', 'KRW-AAVE', 'KRW-BTC']
                 current_coin = []
                 noised_coin = get_noised_coin(sort_coin50)
                 target_df = get_target_df(noised_coin)
@@ -350,14 +354,11 @@ while True:
                     myToken, "#history", "현재 잔고는: " +
                     str(upbit.get_balance("KRW"))
                 )
-
-                print(start_time)
-                print("set end")
-
                 target_coin = target_df['coin'].values.tolist()
-                post_message(myToken, "#history", "세팅 완료 시간: " + str(now))
                 print(target_coin)
 
+                print("set end")
+                post_message(myToken, "#history", "세팅 완료 시간: " + str(now))
                 post_message(myToken, "#history", "타깃은: " +
                              " ".join(target_coin))
 
