@@ -160,9 +160,9 @@ def get_noised_coin(tickers):
 # 노이즈가 포함된 df 출력
 
 
-def get_noised_df():
+def get_noised_df(tickers):
     """노이즈 0.5이하인것 조회"""
-    tickers = pyupbit.get_tickers(fiat="KRW")
+    #tickers = pyupbit.get_tickers(fiat="KRW")
     df = pd.DataFrame()
     for ticker in tickers:
         try:
@@ -323,8 +323,17 @@ KST = pytz.timezone('Asia/Seoul')
 # 시작 메세지 슬랙 전송
 post_message(myToken, "#history", "시스템 시작")
 print("Trade System Start")
+print(get_sort50(tickers))
 
-while True:
+sort_coin50 = ['KRW-BTT', 'KRW-XEC', 'KRW-BTC']
+current_coin = []
+noised_coin = get_noised_coin(sort_coin50)
+target_df = get_target_df(noised_coin)
+print(target_df)
+target_coin = target_df[0].values.tolist()
+print(target_coin)
+A = False
+while(A == True):
     try:
         now = datetime.datetime.now(KST)
         start_time = datetime.datetime(now.year, now.month, now.day, 9, 00, 00)
