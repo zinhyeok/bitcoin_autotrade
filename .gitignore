@@ -183,7 +183,8 @@ $RECYCLE.BIN/
 #secret file
 upbit.txt
 token.txt
-
+bitcoinAutoTrade_Test.py
+*.ipynb
 #secret folder 
 .vscode/
 

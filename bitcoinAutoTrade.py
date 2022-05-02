@@ -331,25 +331,21 @@ while True:
         end_time = start_time + datetime.timedelta(days=1)
         start_time = KST.localize(start_time)
         end_time = KST.localize(end_time)
-        # 9:00~9:01 10초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
+        # 9:00~9:00 30초사이에는 노이즈가 0.4이하인 코인 선정 업데이트 & 수익률 업데이트 &목표가 seting
         if (
-            start_time < now < start_time + datetime.timedelta(seconds=10)
+            start_time < now < start_time + datetime.timedelta(seconds=30)
             or target_df is None
         ):
             fee = 0.0005
             try:
                # tickers = pyupbit.get_tickers(fiat="KRW")
                # sort_coin50 = get_sort50(tickers)
-                sort_coin50 = ['KRW-BTT', 'KRW-XEC', 'KRW-MFT', 'KRW-MBL', 'KRW-TRX', 'KRW-TFUEL', 'KRW-QKC', 'KRW-DOGE', 'KRW-SC', 'KRW-AHT', 'KRW-VET', 'KRW-MVL', 'KRW-XRP', 'KRW-STMX', 'KRW-RFR', 'KRW-MED', 'KRW-POWR', 'KRW-ORBS', 'KRW-ANKR', 'KRW-IQ', 'KRW-JST', 'KRW-BORA', 'KRW-SNT', 'KRW-ZIL', 'KRW-MANA', 'KRW-META', 'KRW-ONG', 'KRW-SSX', 'KRW-WAXP', 'KRW-ICX', 'KRW-STPT', 'KRW-CHZ', 'KRW-XLM', 'KRW-WEMIX', 'KRW-ADA', 'KRW-HBAR', 'KRW-ZRX', 'KRW-UPP', 'KRW-HUM', 'KRW-MOC', 'KRW-AERGO', 'KRW-FCT2', 'KRW-STEEM', 'KRW-ONT', 'KRW-THETA', 'KRW-ALGO', 'KRW-SXP',
+                sort_coin50 = ['KRW-BTC', 'KRW-XEC', 'KRW-MFT', 'KRW-MBL', 'KRW-TRX', 'KRW-TFUEL', 'KRW-QKC', 'KRW-DOGE', 'KRW-SC', 'KRW-AHT', 'KRW-VET', 'KRW-MVL', 'KRW-XRP', 'KRW-STMX', 'KRW-RFR', 'KRW-MED', 'KRW-POWR', 'KRW-ORBS', 'KRW-ANKR', 'KRW-IQ', 'KRW-JST', 'KRW-BORA', 'KRW-SNT', 'KRW-ZIL', 'KRW-MANA', 'KRW-META', 'KRW-ONG', 'KRW-SSX', 'KRW-WAXP', 'KRW-ICX', 'KRW-STPT', 'KRW-CHZ', 'KRW-XLM', 'KRW-WEMIX', 'KRW-ADA', 'KRW-HBAR', 'KRW-ZRX', 'KRW-UPP', 'KRW-HUM', 'KRW-MOC', 'KRW-AERGO', 'KRW-FCT2', 'KRW-STEEM', 'KRW-ONT', 'KRW-THETA', 'KRW-ALGO', 'KRW-SXP',
                                'KRW-ARDR', 'KRW-POLY', 'KRW-STX', 'KRW-KNC', 'KRW-CRO', 'KRW-EOS', 'KRW-ELF', 'KRW-WAVES', 'KRW-FLOW', 'KRW-CVC', 'KRW-SBD', 'KRW-GLM', 'KRW-MLK', 'KRW-DAWN', 'KRW-1INCH', 'KRW-ENJ', 'KRW-GRS', 'KRW-KAVA', 'KRW-SRM', 'KRW-NEO', 'KRW-HIVE', 'KRW-PUNDIX', 'KRW-STORJ', 'KRW-IOTA', 'KRW-GAS', 'KRW-ARK', 'KRW-AXS', 'KRW-NEAR', 'KRW-MTL', 'KRW-AQT', 'KRW-XTZ', 'KRW-STRAX', 'KRW-LSK', 'KRW-ETC', 'KRW-OMG', 'KRW-CBK', 'KRW-TON', 'KRW-LINK', 'KRW-DOT', 'KRW-SOL', 'KRW-AVAX', 'KRW-REP', 'KRW-STRK', 'KRW-BTG', 'KRW-ETH', 'KRW-BSV', 'KRW-LTC', 'KRW-AAVE', 'KRW-BTC']
                 current_coin = []
                 noised_coin = get_noised_coin(sort_coin50)
                 target_df = get_target_df(noised_coin)
 
-                post_message(
-                    myToken, "#history", "현재 잔고는: " +
-                    str(upbit.get_balance("KRW"))
-                )
                 target_coin = target_df['coin'].values.tolist()
                 print(target_coin)
 
